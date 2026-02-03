@@ -1,0 +1,30 @@
+Package: bcmvr
+Type: Package
+Title: Treatment Effect Inference Using Box-Cox Multivariate Regression
+Version: 0.1.0
+Authors@R: 
+    person(
+      "Kazushi", "Maruo",
+      role = c("aut", "cre"),
+      email = "kazushi.maruo@gmail.com"
+    )
+Description: 
+    Provides treatment effect inference for longitudinal outcomes with skewed
+    distributions using a Box-Cox multivariate regression (BCMVR) model.
+    Models are fitted separately by group, and prespecified group comparisons
+    are conducted using covariate-adjusted marginal medians, median differences,
+    and probability-based effect measures that compare full marginal
+    distributions.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Imports:
+    stats,
+    Matrix,
+    rlang,
+    dplyr,
+    tidyr,
+    MASS
+Suggests:
+    bcmixed
+RoxygenNote: 7.3.3
