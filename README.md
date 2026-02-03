@@ -21,7 +21,7 @@ group comparisons are performed using:
 
 ``` r
 # install.packages("remotes")
-remotes::install_github("YOUR_GITHUB_ACCOUNT/bcmvr")
+remotes::install_github("kzkzmr/bcmvr")
 ```
 
 ## Quick start
@@ -32,8 +32,8 @@ This example uses `aidscd4` from **bcmixed**.
 data(aidscd4, package = "bcmixed")
 set.seed(1)
 
-# sample ~200 subjects (IDs), keep all rows for those IDs
-id_keep <- sample(unique(aidscd4$id), size = 200, replace = FALSE)
+# sample ~140 subjects (IDs), keep all rows for those IDs
+id_keep <- sample(unique(aidscd4$id), size = 140, replace = FALSE)
 dat <- subset(aidscd4, id %in% id_keep)
 
 # make treatment a factor so group labels are stable/readable
