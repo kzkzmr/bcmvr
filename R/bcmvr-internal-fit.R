@@ -301,6 +301,7 @@ bcmvr_fit_g <- function(y, x = NULL){
       X <- matrix(1, nrow(z), 1)
       res0 <- lm(z ~ 1, na.action = na.exclude)
       beta0 <- as.matrix(t(res0$coefficients))
+      Sgm <- cov(res0$residuals)
     } else {
       X <- cbind(1, x)
       res0 <- lm(z ~ x, na.action = na.exclude)
@@ -316,10 +317,12 @@ bcmvr_fit_g <- function(y, x = NULL){
             beta0[j, na_pos] <- bj[na_pos]
           }
         }
+        r0 <- z - X %*% t(beta0)
+        Sgm <- cov(r0, use = "pairwise.complete.obs")
+      } else {
+        Sgm <- cov(res0$residuals)
       }
     }
-    r0 <- z - X %*% t(beta0)
-    Sgm <- cov(r0, use = "pairwise.complete.obs")
     alpha0 <- Sgm[upper.tri(Sgm, diag = TRUE)]
     nb <- length(beta0)
     na <- length(alpha0)
@@ -492,7 +495,8 @@ bcmvr_fit_g <- function(y, x = NULL){
       yk <- dkp - dk
       Bk <- Bk - (Bksk %*% t(Bksk)) / (sum(Bksk * sk)) + (yk %*% t(yk)) /
         (sum(sk * yk))
-      if ((sum(dkp ^ 2) / abs(ln1)) < 1e-7) {
+      if (!is.finite(ln1) || !is.finite(sum(dkp ^ 2)) ||
+          (sum(dkp ^ 2) / abs(ln1)) < 1e-7) {
         flg <- 0
       }
       if (alp < 1e-5 & cnt2 > 0) {
@@ -509,7 +513,7 @@ bcmvr_fit_g <- function(y, x = NULL){
       dk <- dkp
       ln0 <- ln1
       count <- count + 1
-      if (count>50) {
+      if (count > 50) {
         flg <- 0
       }
       if (flg==0) {

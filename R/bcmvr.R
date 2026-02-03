@@ -78,8 +78,8 @@
 #' data(aidscd4, package = "bcmixed")
 #' set.seed(1)
 #'
-#' # sample ~140 subjects (IDs), keep all rows for those IDs
-#' id_keep <- sample(unique(aidscd4$id), size = 140, replace = FALSE)
+#' # sample ~120 subjects (IDs), keep all rows for those IDs
+#' id_keep <- sample(unique(aidscd4$id), size = 120, replace = FALSE)
 #' dat <- subset(aidscd4, id %in% id_keep)
 #'
 #' # (optional) make treatment a factor so pairs are readable/stable

@@ -108,12 +108,7 @@ data_reshape <- function(data, outcome, id, group, time, cov = NULL) {
     keep_id <- yg_df[[id_col]]
 
     # ---- 4) baseline covariates matrix (or NULL) ----
-    if (length(cov) == 0) {
-      xg_df <- yg_df[, id_col, drop = FALSE]
-      xg_df$..dummy.. <- 0  # placeholder (dropped below)
-      xg_df <- xg_df[, id_col, drop = FALSE]
-      xg[[gg]] <- NULL
-    } else {
+    if (length(cov) > 0) {
       xg_df <- dat_g |>
         dplyr::filter(.data[[id_col]] %in% keep_id) |>
         dplyr::select({{ id }}, dplyr::all_of(cov)) |>
