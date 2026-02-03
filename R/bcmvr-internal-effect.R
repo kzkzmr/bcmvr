@@ -89,7 +89,13 @@ prob_eff_inf <- function(theta1, theta2, vtheta1, vtheta2, t,
   med1 <- (l1 * m1 + 1) ^ (1 / l1)
   med2 <- (l2 * m2 + 1) ^ (1 / l2)
   up1 <- (l1 * (m1 + s1 * qnorm(0.999)) + 1) ^ (1 / l1)
+  if (is.nan(up1)) {
+    up1 <- Inf
+  }
   up2 <- (l2 * (m2 + s2 * qnorm(0.999)) + 1) ^ (1 / l2)
+  if (is.nan(up2)) {
+    up2 <- Inf
+  }
   up <- max(min(med1 * 100, up1), min(med2 * 100, up2))
   prob_integrand <- function(y, l1, m1, s1, l2, m2, s2) {
     z1 <- (y ^ l1 - 1) / l1
