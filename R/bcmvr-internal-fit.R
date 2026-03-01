@@ -556,6 +556,7 @@ bcmvr_fit_g <- function(y, x = NULL){
     rsd <- NA
     Sgm <- NA
     z <- NA
+    ncc <- NA
   } else {
     lambda <- res$lambda
     lik <- res$lik
@@ -569,9 +570,10 @@ bcmvr_fit_g <- function(y, x = NULL){
     beta <- resbs$beta
     alpha <- resbs$alpha
     Sgm <- SgmC(alpha, tt)
+    ncc <- sum(complete.cases(y))
   }
   return(list(lambda = lambda, beta = beta, alpha = alpha, Sigma = Sgm,
-              lik = -lik, err = err))
+              lik = -lik, ncc = ncc, err = err))
 }
 
 

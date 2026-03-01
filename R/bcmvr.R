@@ -66,12 +66,14 @@
 #'   \item{meddiff}{A data frame of median differences for specified ordered
 #'     pairs, computed as \code{median(g1) - median(g2)}, with standard errors,
 #'     confidence intervals, and Wald-type p-values under independent groups.}
+#'   \item{meddiff.ss}{Small-sample adjusted \code{meddif} object.}
 #'   \item{prob}{A data frame of probability-based effect measures. It reports
 #'     \eqn{P(Y_{g1,t} < Y_{g2,t})} on the original outcome scale, with
 #'     inference performed on the logit scale. Under \code{smaller = TRUE},
 #'     this can be interpreted as the probability that the test group
 #'     (\code{g1}) has a more favorable outcome than the control group
 #'     (\code{g2}).}
+#'   \item{prob.ss}{Small-sample adjusted \code{prob} object.}
 #' }
 #'
 #' @examples
@@ -112,7 +114,7 @@
 #' Maruo K et al. Inference on treatment effects for longitudinal outcomes with
 #' skewed distributions. Submitting (available from author).
 #'
-#' @importFrom stats cov dnorm formula integrate lm median na.exclude pnorm qnorm setNames
+#' @importFrom stats cov dnorm formula integrate lm median na.exclude pnorm qnorm pt qt complete.cases setNames
 #'
 #' @export
 bcmvr <- function(data, outcome, id, group, time, cov = NULL,
@@ -288,7 +290,9 @@ bcmvr <- function(data, outcome, id, group, time, cov = NULL,
 
   # --- 2) median difference + prob for each pair x time ---
   meddiff_rows <- list()
+  meddiff_rows_ss <- list()
   prob_rows <- list()
+  prob_rows_ss <- list()
 
   for (r in seq_len(nrow(pair_df))) {
     g1 <- pair_df$g1[r]
@@ -300,7 +304,8 @@ bcmvr <- function(data, outcome, id, group, time, cov = NULL,
       m1 <- get_median_row(g1, t0)
       m2 <- get_median_row(g2, t0)
 
-      md <- median_diff_inf(m1, m2, level = level)
+      md <- median_diff_inf(m1, m2, thetag[[i1]]$ncc, thetag[[i2]]$ncc, tt,
+                            level = level)
 
       meddiff_rows[[length(meddiff_rows) + 1]] <- data.frame(
         g1 = g1, g2 = g2, t = t0,
@@ -310,15 +315,30 @@ bcmvr <- function(data, outcome, id, group, time, cov = NULL,
         stringsAsFactors = FALSE
       )
 
+      meddiff_rows_ss[[length(meddiff_rows) + 1]] <- data.frame(
+        g1 = g1, g2 = g2, t = t0,
+        meddiff = md$meddiff, SE = md$SE.ss,
+        lower.cl = md$lower.cl.ss, upper.cl = md$upper.cl.ss,
+        t.value = md$z.value.ss, p.value = md$p.value.ss,
+        stringsAsFactors = FALSE
+      )
+
       prb <- prob_eff_inf(thetag[[i1]], thetag[[i2]],
                           vthetag[[i1]], vthetag[[i2]],
                           t = t0, xmean = xmean, smaller = smaller,
                           robust = robust)
 
-      prob_rows[[length(prob_rows) + 1]] <- cbind(
-        data.frame(g1 = g1, g2 = g2, t = t0, stringsAsFactors = FALSE),
-        prb
-      )
+      prob_rows[[length(prob_rows) + 1]] <- data.frame(
+        g1 = g1, g2 = g2, t = t0, prob = prb$prob, se.logit = prb$se.logit,
+        lower.cl = prb$lower.cl, upper.cl = prb$upper.cl,
+        z.value = prb$z.value, p.value = prb$p.value,
+        stringsAsFactors = FALSE)
+
+      prob_rows_ss[[length(prob_rows) + 1]] <- data.frame(
+        g1 = g1, g2 = g2, t = t0, prob = prb$prob, se.logit = prb$se.logit.ss,
+        lower.cl = prb$lower.cl.ss, upper.cl = prb$upper.cl.ss,
+        t.value = prb$z.value.ss, p.value = prb$p.value.ss,
+        stringsAsFactors = FALSE)
     }
   }
 
@@ -334,6 +354,8 @@ bcmvr <- function(data, outcome, id, group, time, cov = NULL,
     vcov = vthetag,
     median = median_df,
     meddiff = do.call(rbind, meddiff_rows),
-    prob = do.call(rbind, prob_rows)
+    meddiff.ss = do.call(rbind, meddiff_rows_ss),
+    prob = do.call(rbind, prob_rows),
+    prob.ss = do.call(rbind, prob_rows_ss)
   )
 }

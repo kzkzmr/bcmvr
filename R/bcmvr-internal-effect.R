@@ -33,24 +33,35 @@ median_inf_g <- function(Vtheta, lambda, beta, alpha, t, xmean = NULL) {
 }
 
 # Inference on model median difference
-median_diff_inf <- function(med_g1, med_g2, level = 0.95){
+median_diff_inf <- function(med_g1, med_g2, ncc1, ncc2, tt, level = 0.95){
   d  <- med_g1$median - med_g2$median
-  se <- sqrt(med_g1$SE^2 + med_g2$SE^2)
+  SE <- sqrt(med_g1$SE ^ 2 + med_g2$SE ^ 2)
+  ncc <- ncc1 + ncc2
+  SEss <- sqrt(med_g1$SE ^ 2 + med_g2$SE ^ 2) * sqrt(ncc / (ncc - tt))
 
-  z <- stats::qnorm(1 - (1 - level)/2)
-  lower <- d - z * se
-  upper <- d + z * se
+  z <- qnorm(1 - (1 - level) / 2)
+  lower <- d - z * SE
+  upper <- d + z * SE
 
-  zval <- d / se
-  pval <- 2 * (1 - stats::pnorm(abs(zval)))
+  zval <- d / SE
+  pval <- 2 * (1 - pnorm(abs(zval)))
 
-  list(meddiff = d, SE = se, lower.cl = lower, upper.cl = upper,
-       z.value = zval, p.value = pval, level = level)
+  tss <- qt(1 - (1 - level) / 2, ncc - tt)
+  lowerss <- d - tss * SEss
+  upperss <- d + tss * SEss
+  zvalss <- d / SEss
+  pvalss <- 2 * (1 - pt(abs(zvalss), ncc - tt))
+
+  list(meddiff = d, SE = SE, lower.cl = lower, upper.cl = upper,
+       z.value = zval, p.value = pval, SE.ss = SEss,
+       lower.cl.ss = lowerss, upper.cl.ss = upperss,
+       z.value.ss = zvalss, p.value.ss = pvalss, level = level)
 }
 
 # Inference on probability based treatment effect
 prob_eff_inf <- function(theta1, theta2, vtheta1, vtheta2, t,
-                         xmean = NULL, smaller, robust = TRUE) {
+                         xmean = NULL, smaller, robust = TRUE,
+                         level = 0.95) {
   xbar <- c(1, xmean)
   tt <- length(theta1$lambda)
   Kp1 <- ncol(theta1$beta)
@@ -68,6 +79,8 @@ prob_eff_inf <- function(theta1, theta2, vtheta1, vtheta2, t,
     m2 <- sum(xbar * theta2$beta[t, ])
     s1 <- sqrt(theta1$Sigma[t, t])
     s2 <- sqrt(theta2$Sigma[t, t])
+    ncc1 <- theta1$ncc
+    ncc2 <- theta2$ncc
     if (robust) {
       Vt <- as.matrix(Matrix::bdiag(vtheta1$V.rob, vtheta2$V.rob))
     } else {
@@ -80,6 +93,8 @@ prob_eff_inf <- function(theta1, theta2, vtheta1, vtheta2, t,
     m2 <- sum(xbar * theta1$beta[t, ])
     s1 <- sqrt(theta2$Sigma[t, t])
     s2 <- sqrt(theta1$Sigma[t, t])
+    ncc1 <- theta2$ncc
+    ncc2 <- theta1$ncc
     if (robust) {
       Vt <- as.matrix(Matrix::bdiag(vtheta2$V.rob, vtheta1$V.rob))
     } else {
@@ -185,15 +200,29 @@ prob_eff_inf <- function(theta1, theta2, vtheta1, vtheta2, t,
   dt2[idx_a] <- da2
   dt <- (1 / prob + 1 / (1 - prob)) * c(dt1, dt2)
   se <- sqrt(t(dt) %*% Vt %*% dt)
+
   lgtprob <- log(prob / (1 - prob))
   z.value <- lgtprob / se
   p.value <- (1 - pnorm(abs(z.value))) * 2
-  upp0 <- log(prob / (1 - prob)) + 1.96 * se
-  low0 <- log(prob / (1 - prob)) - 1.96 * se
+  za <- qnorm(1 - (1 - level) / 2)
+  upp0 <- log(prob / (1 - prob)) + za * se
+  low0 <- log(prob / (1 - prob)) - za * se
   upper.cl <-1 / (1 + exp(-upp0))
   lower.cl <- 1 / (1 + exp(-low0))
-  return(data.frame(prob = prob, se.logit = se, lower.cl = lower.cl,
-                    upper.cl = upper.cl, z.value = z.value,
-                    p.value = p.value))
+
+  ncc <- ncc1 + ncc2
+  sess <- se * sqrt(ncc / (ncc - tt))
+  z.value.ss <- lgtprob / sess
+  p.value.ss <- (1 - pt(abs(z.value.ss), ncc - tt)) * 2
+  ta <- qt(1 - (1 - level) / 2, ncc - tt)
+  upp0ss <- log(prob / (1 - prob)) + ta * sess
+  low0ss <- log(prob / (1 - prob)) - ta * sess
+  upper.cl.ss <- 1 / (1 + exp(-upp0ss))
+  lower.cl.ss <- 1 / (1 + exp(-low0ss))
+  return(list(prob = prob, se.logit = se, lower.cl = lower.cl,
+              upper.cl = upper.cl, z.value = z.value, p.value = p.value,
+              se.logit.ss = sess, lower.cl.ss = lower.cl.ss,
+              upper.cl.ss = upper.cl.ss, z.value.ss = z.value.ss,
+              p.value.ss = p.value.ss))
 }
 

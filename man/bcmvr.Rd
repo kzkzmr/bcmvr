@@ -75,12 +75,14 @@ A list with the following components:
   \item{meddiff}{A data frame of median differences for specified ordered
     pairs, computed as \code{median(g1) - median(g2)}, with standard errors,
     confidence intervals, and Wald-type p-values under independent groups.}
+  \item{meddiff.ss}{Small-sample adjusted \code{meddif} object.}
   \item{prob}{A data frame of probability-based effect measures. It reports
     \eqn{P(Y_{g1,t} < Y_{g2,t})} on the original outcome scale, with
     inference performed on the logit scale. Under \code{smaller = TRUE},
     this can be interpreted as the probability that the test group
     (\code{g1}) has a more favorable outcome than the control group
     (\code{g2}).}
+  \item{prob.ss}{Small-sample adjusted \code{prob} object.}
 }
 }
 \description{
